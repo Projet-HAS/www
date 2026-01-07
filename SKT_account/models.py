@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Q, F
+from django.db.models import Q, F, CheckConstraint
 from django.db.models.functions import Length
 from django.db.models.expressions import RawSQL
 from django.contrib.auth.models import User, Group, AbstractUser, BaseUserManager
