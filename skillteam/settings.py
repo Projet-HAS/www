@@ -34,6 +34,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://51.210.77.210'
 ]
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Application definition
 
 INSTALLED_APPS = [
