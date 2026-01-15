@@ -132,7 +132,6 @@ def connectionHandler(request) :
     #traitement en fonction du groupe de l'utilisateur
     match user.groups.first().name:
         case "SKT_User":
-            print("Utilisateur")
             url = generate_secure_url(user.id, settings.SKT_URL_WEBAPP)
             return redirect(url)
         case "Customer":
