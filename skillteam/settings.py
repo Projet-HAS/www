@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--!adrdwy*(e4dzh6i$n8t%9oq_-(kf1i7(tu0ad-x6g7d#^+8f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['skillteam.net', 'www.skillteam.net']
+ALLOWED_HOSTS = ['skillteam.net', 'www.skillteam.net', '127.0.0.1']
 
 
 CSRF_TRUSTED_ORIGINS = [
@@ -153,5 +153,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Paramètre de l'application
 
-SKM_URL_WEBAPP = 'localhost'
-SKM_URL_Timeout = '300'
+SKT_URL_WEBAPP = 'skillteam.app'
+SKT_SECRET_KEY = "skillteamunesuperapplipourdeveloppersescompetences"
+SKT_URL_Timeout = '300'

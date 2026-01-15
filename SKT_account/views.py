@@ -13,6 +13,14 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .forms import UserCreateForm
 
+# Variables globales
+from django.conf import settings
+
+# Pour l'encodage du Token
+import hmac, hashlib, base64, time 
+from urllib.parse import urlencode
+
+
 # Create your views here.
 
 @staff_member_required
@@ -36,6 +44,25 @@ def create_user_view(request):
 
     return render(request, "create_user.html", {"form": form})
 
+# Génération du TOKEN et de l'URL pour appel de l'app
+def generate_secure_url(IDUser, URL):
+	#récupération de l’heure
+	timestamp = str(int(time.time()))
+
+    #création du message à encoder (IDUser et heure)
+	message = f"{IDUser}|{timestamp}"
+
+	#création de la signature à partir de la clé secrète et du message
+	signature = hmac.new(settings.SKT_SECRET_KEY.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+	#création du token complet 
+	token_raw = f"{message}|{signature}"
+
+	#encodage du token
+	token_b64 = base64.urlsafe_b64encode(token_raw.encode()).decode()
+
+	#renvoi de l’URL complète
+	return f"https://{URL}?token={token_b64}"
 
 def connectionHandler(request) :
 
@@ -62,9 +89,8 @@ def connectionHandler(request) :
                 'users_manage.html',
                 {'users': users_in_admin_group}
             )        
-            
 
-   #si c'est un Administrateur
+    #si c'est un Administrateur
     if user.is_authenticated and user.groups.first().name=="Administrator" and user.is_active :
             
             # Liste des entreprises
@@ -86,11 +112,11 @@ def connectionHandler(request) :
     # Comparaison avec la date du jour (UTC par défaut, convertie en date)
     today = timezone.now().date()
 
-    # vérification de la définition d'une date de début de licence
+    # Vérification de la définition d'une date de début de licence
     if not entreprise or entreprise.Entreprise_Licence_Date_Start is None:
         raise PermissionDenied(_("Aucune date de licence définie pour l'entreprise."))
 
-    # vérification de la validité de la licence
+    # Vérification de la validité de la licence
     licence = False
     # La licence est active
     if entreprise.Entreprise_Licence_Statut == 'ACT' :
@@ -105,14 +131,10 @@ def connectionHandler(request) :
 
     #traitement en fonction du groupe de l'utilisateur
     match user.groups.first().name:
-        case "Administrator":
-            print("Administrator")
-            return render(
-                request,
-                'users_manage.html',
-            )
         case "SKT_User":
             print("Utilisateur")
+            url = generate_secure_url(user.id, settings.SKT_URL_WEBAPP)
+            return redirect(url)
         case "Customer":
             print("Client")
         case "Supervisor":

@@ -107,7 +107,7 @@ class Entreprise(models.Model) :
             "invalid": _("Veuillez saisir un entier valide."),
             "blank": _("Le nombre de clients autorisés est requis."),
         },
-        help_text=_("Entier compris entre 0 et 99 999.")
+        help_text=_("Entier compris entre 0 et 999.")
     )
 
     #Nombre de compte clients créés (entre 0 et le nombre de client autorisés)

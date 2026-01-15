@@ -5,11 +5,13 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
+from .models import Entreprise
 
-User = get_user_model()
 
+
+# Formulaire de création d'un utilisateur
 class UserCreateForm(forms.Form):
-    
+    User = get_user_model()
     # Identité
     first_name = forms.CharField(label=_("Prénom"), max_length=150, required=True)
     last_name = forms.CharField(label=_("Nom"), max_length=150, required=True)
@@ -63,3 +65,47 @@ class UserCreateForm(forms.Form):
         user.groups.add(group)
 
         return user
+
+
+# Formulaire de création d'une entreprise
+class EntrepriseForm(forms.ModelForm):
+    class Meta:
+        model = Entreprise
+        # On exclut la PK et la date auto_now_add
+        exclude = ["IDEntreprise", "Entreprise_Licence_Date_Start"]
+        widgets = {
+            "Entreprise_Licence_Date_End": forms.DateInput(attrs={"type": "date"}),
+            # Tu peux ajouter des classes CSS si tu utilises Bootstrap/Tailwind
+            "Entreprise_Name": forms.TextInput(attrs={"placeholder": "Nom de l'entreprise"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        # Règles: created <= allow pour chaque couple
+        couples = [
+            ("Entreprise_Num_Customer_Create", "Entreprise_Num_Customer_Allow", "clients"),
+            ("Entreprise_Num_User_Create", "Entreprise_Num_User_Allow", "utilisateurs"),
+            ("Entreprise_Num_Supervisor_Create", "Entreprise_Num_Supervisor_Allow", "superviseurs"),
+            ("Entreprise_Num_Group_Create", "Entreprise_Num_Group_Allow", "groupes"),
+        ]
+
+        for created_field, allow_field, label in couples:
+            created = cleaned.get(created_field)
+            allow = cleaned.get(allow_field)
+            if created is not None and allow is not None and created > allow:
+                self.add_error(
+                    created_field,
+                    f"Le nombre créé ({created}) ne peut pas dépasser le nombre autorisé ({allow}) pour les {label}."
+                )
+
+        # (Optionnel) Si statut ≠ ACTIVE, on peut exiger une date de fin
+        statut = cleaned.get("Entreprise_Licence_Statut")
+        date_fin = cleaned.get("Entreprise_Licence_Date_End")
+        if statut in {"DIS", "ARC"} and not date_fin:
+            self.add_error(
+                "Entreprise_Licence_Date_End",
+                "Veuillez renseigner une date de fin si la licence est désactivée ou archivée."
+            )
+
+        return cleaned
